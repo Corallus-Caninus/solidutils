@@ -1,9 +1,10 @@
 from solid import *
 from solid.utils import *
 from math import sin, cos, radians, degrees
-from intakeManifold import extrude_intake_manifold
+from intake import extrude_intake_manifold
 
-# TODO: set segments on all cylindric primitives for smooth models
+#############Static Constants#############
+CircleResolution = 100
 
 # TODO: ensure the intakeRadius holes are consistent wrt wallWidth
 # TODO: reducing r^2 - wallWidth^2  =? (l-wallwidth)*(w-wallWidth)
@@ -14,6 +15,9 @@ from intakeManifold import extrude_intake_manifold
 # OR: consider wallWidth added to hole defined by intake
 
 # TODO: verify wallWidth addition to solids works
+#               (area is no less than intakeRadius throughout the model)
+#               only pressure lose should be from friction and filtering no venturi effect
+# TODO: shouldnt need to subtract wall since added, otherwise wall is twice the thickness
 
 
 # DESIGN GOAL:
@@ -51,20 +55,17 @@ def ConeFilter(
         wallWidth: width of wall for all parts
     '''
     ############# Build Solids: #############
-    intakeRadius = sqrt((intakeSlitLength*intakeSlitWidth+wallWidth)/pi)
+    # WAS: +wallWidth
+    intakeRadius = sqrt((intakeSlitLength*intakeSlitWidth)/pi)
     # build each part
     mainBodySolid = cylinder(r=(cylinderRadius + wallWidth),
-                             h=(cylinderHeight+wallWidth))
+                             h=(cylinderHeight+wallWidth), segments=CircleResolution)
     collectorConeSolid = cylinder(
-        r1=(cylinderRadius + wallWidth), r2=(intakeRadius + wallWidth), h=collectorDepth)
+        r1=(cylinderRadius + wallWidth), r2=(intakeRadius + wallWidth), h=collectorDepth, segments=CircleResolution)
     vortexTubeSolid = cylinder(
-        r=(intakeRadius + wallWidth), h=(vortexSearcherDepth + intakeSlitLength + wallWidth), segments=100)
-    # currently using a slit of unit width.
-    # set width to expected particle/blob size
-    # TODO:  move these into parameters for filter
+        r=(intakeRadius + wallWidth), h=(vortexSearcherDepth + intakeSlitLength), segments=CircleResolution)
     intakeSolid = extrude_intake_manifold(
-        # TODO: should this be parameterized or just as much as possible? \
-        # constants have no place in parametric models
+        # TODO: constants have no place in parametric models
         intake_resolution=100,
         exhaust_slit=intakeSlitLength + wallWidth,
         exhaust_width=intakeSlitWidth + wallWidth,
@@ -73,36 +74,34 @@ def ConeFilter(
     ############# Open holes inside solids: #############
     # becuase we parameterized by radius, wall width can be subtracted directly
     mainBody = mainBodySolid - \
-        cylinder(r=cylinderRadius-wallWidth, h=cylinderHeight-wallWidth)
+        cylinder(r=cylinderRadius, h=cylinderHeight, segments=CircleResolution)
     collectorCone = collectorConeSolid - \
-        hole()(cylinder(r1=cylinderRadius-wallWidth,
-                        r2=intakeRadius-wallWidth, h=collectorDepth))
+        hole()(cylinder(r1=cylinderRadius,
+                        r2=intakeRadius, h=collectorDepth, segments=CircleResolution))
     vortexTube = vortexTubeSolid - \
-        hole()(cylinder(r=(intakeRadius - wallWidth),
-                        h=(vortexSearcherDepth + intakeSlitLength + wallWidth), segments=100))
+        hole()(cylinder(r=(intakeRadius),
+                        h=(vortexSearcherDepth + intakeSlitLength), segments=CircleResolution))
     intake = intakeSolid - hole()(extrude_intake_manifold(
         intake_resolution=100,
-        exhaust_slit=intakeSlitLength-wallWidth,
-        exhaust_width=intakeSlitWidth-wallWidth,
+        exhaust_slit=intakeSlitLength,
+        exhaust_width=intakeSlitWidth,
         exhaust_length=intakeSlitSize))
 
     ############# Assemble filter: #############
     # mainBody
+    # TODO: remove rotates where appropriate
     if(intakeLeft is True):
         filter = mainBody + \
             rotate([180, 0, 0])(collectorCone) + \
-            up(cylinderHeight - (vortexSearcherDepth + intakeSlitLength))(vortexTube) + \
+            up(cylinderHeight - (vortexSearcherDepth + intakeSlitLength-wallWidth))(vortexTube) + \
             left(cylinderRadius - intakeSlitWidth)(up(cylinderHeight - intakeSlitLength/2 - wallWidth)
                                                    (rotate([90, 90, 0])(intake)))
     else:
         filter = mainBody + \
             rotate([180, 0, 0])(collectorCone) + \
-            up(cylinderHeight - (vortexSearcherDepth + intakeSlitLength))(vortexTube) + \
+            up(cylinderHeight - (vortexSearcherDepth + intakeSlitLength-wallWidth))(vortexTube) + \
             right(cylinderRadius - intakeSlitWidth)(up(cylinderHeight - intakeSlitLength/2 - wallWidth)
                                                     (rotate([90, 90, 0])(intake)))
-    # TODO this is bad! need to parameterize width. only allowed because
-    # currently only supporting slit with 1 width!
-    # TODO: cylHeight-crossSection should be seekerOffset var
 
     return filter
 
@@ -111,7 +110,7 @@ def ConeFilter(
 solution = ConeFilter(
     intakeSlitLength=10, intakeSlitWidth=2, intakeSlitSize=20,
     intakeLeft=True, vortexSearcherDepth=5, collectorDepth=100,
-    cylinderRadius=10, cylinderHeight=15, wallWidth=0.75)
+    cylinderRadius=10, cylinderHeight=15, wallWidth=0.05)
 # Optimization Considerations:
 # minimize: cylinderHeight constrained by intakeSlitLength
 # minimize: vortexSearcherDepth constrained by cylinderHeight (only increased based on low pressure aerodynamics)
@@ -134,5 +133,6 @@ solution = ConeFilter(
 scad_render_to_file(
     solution,
     "cycloneFilter.scad",
-    "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
+    # "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
+    "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
 )
