@@ -10,9 +10,9 @@ from math import sin, cos, radians, degrees
 # )  # Point this to your openscad executable
 
 
-def construct_polygon(sides, radius_major, radius_minor, offset=0, ):
+def construct_polygon(sides, radius_major, radius_minor, offset):
     """
-    Builds a planar regular polygon of unit depth with a given offset
+    Builds a planar 2D regular polygon with a given offset
 
     Parameters:
         polyPoints: number of points for the reglar polygon

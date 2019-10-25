@@ -50,7 +50,7 @@ def ConeFilter(
         cylinderHeight: height of cylinder that makes up the hull
         wallWidth: width of wall for all parts
     '''
-    ############# Build solids. #############
+    ############# Build Solids: #############
     intakeRadius = sqrt((intakeSlitLength*intakeSlitWidth+wallWidth)/pi)
     # build each part
     mainBodySolid = cylinder(r=(cylinderRadius + wallWidth),
@@ -70,7 +70,7 @@ def ConeFilter(
         exhaust_width=intakeSlitWidth + wallWidth,
         exhaust_length=intakeSlitSize)  # TODO: consider extracting this
 
-    ############# Open holes inside solids#############
+    ############# Open holes inside solids: #############
     # becuase we parameterized by radius, wall width can be subtracted directly
     mainBody = mainBodySolid - \
         cylinder(r=cylinderRadius-wallWidth, h=cylinderHeight-wallWidth)
@@ -107,7 +107,7 @@ def ConeFilter(
     return filter
 
 
-############# Build Filter #############
+############# Build Filter: #############
 solution = ConeFilter(
     intakeSlitLength=10, intakeSlitWidth=2, intakeSlitSize=20,
     intakeLeft=True, vortexSearcherDepth=5, collectorDepth=100,
