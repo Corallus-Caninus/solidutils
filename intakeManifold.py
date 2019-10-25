@@ -72,7 +72,7 @@ def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exha
 # solution = extrude_intake_manifold()
 # scad_render_to_file(
 #     solution,
-#     "segmentedManifold.scad",  # WAS: .scad
-#     "C:/Users/jw.local/Desktop/code/kinesisDataAnalytics/",
+#     "intakeManifold.scad",
+#     "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
 # )
 ################################################

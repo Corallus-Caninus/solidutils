@@ -134,5 +134,5 @@ solution = ConeFilter(
 scad_render_to_file(
     solution,
     "cycloneFilter.scad",
-    "C:/Users/jw.local/Desktop/code/kinesisDataAnalytics//",
+    "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
 )
