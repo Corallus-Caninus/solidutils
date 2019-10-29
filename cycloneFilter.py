@@ -6,18 +6,9 @@ from intake import extrude_intake_manifold
 #############Static Constants#############
 CircleResolution = 100
 
-# TODO: ensure the intakeRadius holes are consistent wrt wallWidth
-# TODO: reducing r^2 - wallWidth^2  =? (l-wallwidth)*(w-wallWidth)
-# (l-wallwidth)*(w-wallWidth) =  lw - lWall - wWall + wallWidth^2
-#  =lw - wall(l+w) + wallWidth^2
-# therefore: wallWidth of rectangle constrains linearly faster than wallWidth of radius
-# Corr: reduce wallWidth of rectangle by wallWidth but add back wall(l+w)
-# OR: consider wallWidth added to hole defined by intake
-
 # TODO: verify wallWidth addition to solids works
 #               (area is no less than intakeRadius throughout the model)
 #               only pressure lose should be from friction and filtering no venturi effect
-# TODO: shouldnt need to subtract wall since added, otherwise wall is twice the thickness
 
 
 # DESIGN GOAL:
@@ -109,8 +100,10 @@ def ConeFilter(
 ############# Build Filter: #############
 solution = ConeFilter(
     intakeSlitLength=10, intakeSlitWidth=2, intakeSlitSize=20,
-    intakeLeft=True, vortexSearcherDepth=5, collectorDepth=100,
+    intakeLeft=True, vortexSearcherDepth=5, collectorDepth=75,
     cylinderRadius=10, cylinderHeight=15, wallWidth=0.05)
+
+
 # Optimization Considerations:
 # minimize: cylinderHeight constrained by intakeSlitLength
 # minimize: vortexSearcherDepth constrained by cylinderHeight (only increased based on low pressure aerodynamics)
@@ -134,5 +127,7 @@ scad_render_to_file(
     solution,
     "cycloneFilter.scad",
     # "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
+
+    # REMOVE THIS WHEN COMMITING
     "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
 )

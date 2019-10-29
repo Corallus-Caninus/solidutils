@@ -39,6 +39,8 @@ def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exha
         exhaust_slit: length of slit that enters the vortex
         exhaust_width: width of slit that enters the vortex and also acts as cyclone guide (minimize)
         exhaust_length: entire length of intake manifold
+    Returns:
+        a Hull() consisting of the segments created with construct_polygon
     '''
     inlet_radius = sqrt(exhaust_slit*exhaust_width/pi)
 
@@ -47,6 +49,8 @@ def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exha
     segmentedIntakeManifold.append(
         down(1)(scale([exhaust_slit, exhaust_width, 1])(cube(center=True)))
     )  # exhaust square (initial object)
+    # raderator is the radius iterator for
+    # rectangle to circle transform
     raderator_major = (exhaust_slit - inlet_radius)/intake_resolution
     raderator_minor = (exhaust_width - inlet_radius)/intake_resolution
 
