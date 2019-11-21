@@ -18,7 +18,7 @@ CircleResolution = 100
 #  sequential-parallel array given a volume/manifold geometry)
 
 
-def ConeFilter(
+def cycloneFilter(
         intakeSlitLength,
         intakeSlitWidth,
         intakeSlitSize,
@@ -60,7 +60,7 @@ def ConeFilter(
         intake_resolution=100,
         exhaust_slit=intakeSlitLength + wallWidth,
         exhaust_width=intakeSlitWidth + wallWidth,
-        exhaust_length=intakeSlitSize)  # TODO: consider extracting this
+        exhaust_length=intakeSlitSize)
 
     ############# Open holes inside solids: #############
     # becuase we parameterized by radius, wall width can be subtracted directly
@@ -98,7 +98,7 @@ def ConeFilter(
 
 
 ############# Build Filter: #############
-solution = ConeFilter(
+solution = cycloneFilter(
     intakeSlitLength=10, intakeSlitWidth=2, intakeSlitSize=20,
     intakeLeft=True, vortexSearcherDepth=5, collectorDepth=75,
     cylinderRadius=10, cylinderHeight=15, wallWidth=0.05)
@@ -122,12 +122,12 @@ solution = ConeFilter(
 #  then run optimization algorithm on it wrt CFD (consider FreeCAD)
 #  also constrain the parameters to reduce testing (discretize and limit parameter space)
 
-############# Writeout Filter #############
+############# Writeout Filter Model #############
 scad_render_to_file(
     solution,
     "cycloneFilter.scad",
     # "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
 
     # REMOVE THIS WHEN COMMITING
-    "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
+#    "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
 )
