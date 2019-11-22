@@ -1,7 +1,7 @@
 from solid import *
 from solid.utils import *
 from math import sin, cos, radians, degrees
-from intake import extrude_intake_manifold
+from . import extrude_intake_manifold
 
 #############Static Constants#############
 CircleResolution = 100
@@ -129,5 +129,5 @@ scad_render_to_file(
     # "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
 
     # REMOVE THIS WHEN COMMITING
-#    "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
+    #    "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
 )
