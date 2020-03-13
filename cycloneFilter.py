@@ -1,20 +1,26 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[24]:
+# In[6]:
 
 
 from solid import *
 from solid.utils import *
 from math import sin, cos, radians, degrees
+# import ipywidgets as widgets
 
 from intake import extrude_intake_manifold
 import viewscad
 
 
+# In[7]:
+
 
 #############Static Config#############
 CircleResolution = 100 
+
+
+# In[8]:
 
 
 # TODO: verify wallWidth addition to solids works
@@ -27,6 +33,9 @@ CircleResolution = 100
 # 1. design optimization for wetScrubber and/or vortex filterArray
 # 2. grid array iteration (for instance: iterating for effective paricle diameter in
 #  sequential-parallel array given a volume/manifold geometry)
+
+
+# In[9]:
 
 
 def cycloneFilter(
@@ -42,8 +51,10 @@ def cycloneFilter(
 ):
     # TODO: pir^2 must be greater than intake cross section where r is cylinderRadius.
     # need more safety constraints.
+    #TODO: verify intake and outlet radius
     '''
     Creates a Cone filter hull
+    
     Parameters:
         intakeSlitHeight: air intake nozzle height
         intakeSlitWidth: air intake nozzle width, should be minimized to particle/blob diameter
@@ -56,9 +67,12 @@ def cycloneFilter(
         cylinderHeight: height of cylinder that makes up the hull
         wallWidth: width of wall for all parts
     '''
+    
     ############# Build Solids: #############
     # WAS: +wallWidth
-    intakeRadius = sqrt((intakeSlitHeight*intakeSlitWidth)/pi)
+    #define intake radius to ensure intake and outlet cross sectional area is equivalent
+    #this optimizes for pressure drop across the filter 
+    intakeRadius = sqrt(intakeSlitHeight*intakeSlitWidth/pi)
     
     # build each part
     mainBodySolid = cylinder(r=(cylinderRadius + wallWidth),
@@ -100,11 +114,17 @@ def cycloneFilter(
     return filter
 
 
+# In[10]:
+
+
 ############# Build Filter: #############
 solution = cycloneFilter(
     intakeSlitHeight=10, intakeSlitWidth=2, intakeSlitLength=20,
     intakeLeft=True, vortexSearcherDepth=5, collectorDepth=75,
-    cylinderRadius=10, cylinderHeight=15, wallWidth=0.05)
+    cylinderRadius=10, cylinderHeight=15, wallWidth=0.5)
+
+
+# In[47]:
 
 
 # Optimization Considerations:
@@ -126,10 +146,37 @@ solution = cycloneFilter(
 #  also constrain the parameters to reduce testing (discretize and limit parameter space)
 
 
+# In[48]:
+
+
+#TODO: this is not functioning in current jupyter lab but would like to get working
+# r = viewscad.Renderer(openscad_exec="/usr/bin/openscad")
+#TODO: save to file then render to try another angle at render method
+# r.render(solution)
+
+
+# In[49]:
+
+
 ############# Writeout Filter Model #############
 scad_render_to_file(
     solution,
     "cycloneFilter.scad",
     # "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
 
+    # REMOVE THIS WHEN COMMITING
+    #    "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
 )
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+

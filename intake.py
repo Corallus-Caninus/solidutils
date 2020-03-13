@@ -1,13 +1,21 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
 from solid import *
 from solid.utils import *
 from math import sin, cos, radians, degrees
 # Encapsulated seperate from cyclone hull due to complexity and reuse of code for vacuumManifold
 
-# TODO: put this back into camelCase because snakes are for dummies
 # TODO: should constraint safety be implemented here? in extrude_intake_manifold?
 # r = viewscad.Renderer(
 #     openscad_exec="C:\Program Files\OpenSCAD\openscad.exe"
 # )  # Point this to your openscad executable
+
+
+# In[2]:
 
 
 def construct_polygon(sides, radius_major, radius_minor, offset):
@@ -31,6 +39,9 @@ def construct_polygon(sides, radius_major, radius_minor, offset):
     return geometry
 
 
+# In[47]:
+
+
 def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exhaust_length):
     '''
     Extrudes an intake manifold for cyclone filtration.
@@ -38,45 +49,79 @@ def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exha
         intake_resolution: how many segments to be used for the final polygon (circle theroetically has infinite)
         exhaust_slit: length of slit that enters the vortex
         exhaust_width: width of slit that enters the vortex and also acts as cyclone guide (minimize)
-        exhaust_length: entire length of intake manifold
+        exhaust_length: extruded distance of intake manifold
     Returns:
         a Hull() consisting of the segments created with construct_polygon
     '''
     inlet_radius = sqrt(exhaust_slit*exhaust_width/pi)
-
-    segmentedIntakeManifold = []  # return value
+    intakeManifold = down(1)(cube([exhaust_slit, exhaust_width, 1], center=True))
+#     segmentedIntakeManifold = []  # return value
     # constants are okay here as this module is meant to be transformed from origin
-    segmentedIntakeManifold.append(
-        down(1)(scale([exhaust_slit, exhaust_width, 1])(cube(center=True)))
-    )  # exhaust square (initial object)
+#     segmentedIntakeManifold.append(
+# #         down(1)(scale([exhaust_slit, exhaust_width, 1])(cube(center=True)))
+#         down(1)(cube([exhaust_slit, exhaust_width, 1], center=True))
+#     )  # exhaust square (initial object)
     # raderator is the radius iterator for
     # rectangle to circle transform
-    raderator_major = (exhaust_slit - inlet_radius)/intake_resolution
-    raderator_minor = (exhaust_width - inlet_radius)/intake_resolution
+    
+    #TODO: this is the problem
+    raderator_major = (exhaust_slit/2 - inlet_radius)/intake_resolution
+    raderator_minor = (exhaust_width/2 - inlet_radius)/intake_resolution
+        
 
     inlet_radius_major = exhaust_slit/2
     inlet_radius_minor = exhaust_width/2
 
     length_iterator = exhaust_length/intake_resolution
-
     for seg in range(1, intake_resolution):
-        inlet_radius_major -= raderator_major/2
-        inlet_radius_minor -= raderator_minor/2
+        inlet_radius_major -= raderator_major
+        inlet_radius_minor -= raderator_minor
+        
+        #TODO: these should equate at all iterations-- iterating incorrectly. 
+        #      shouldnt decrement so much figure out
+        #      derivative of elipse to circle in terms of arc/curvature.
+        #Model as 0, pi/2 pi and 3pi/4 and 2pi points of which 
+        #intakeWidth and intakeHeight need to converge to
+        #polygon also loses some precision to circle. 
+        #should find nonlinear way to extrude
+        
+        print('comparing area elipse: {} with rectangle: {} '.format(                                 pi*inlet_radius_major*inlet_radius_minor, exhaust_slit*exhaust_width))
+        
         length_iterator += exhaust_length/intake_resolution
-        segmentedIntakeManifold.append(
-            extrude_along_path(
-                construct_polygon(seg + 1,
-                                  inlet_radius_major, inlet_radius_minor, length_iterator),
-                [[0, 0, length_iterator], [0, 0, length_iterator + length_iterator]],
-            )
-        )
-    return hull()(segmentedIntakeManifold)
+        
+        intakeManifold += up(length_iterator)(scale([inlet_radius_major, inlet_radius_minor])(cylinder(center=True)))
+        #TODO: need to iterate to this, raderator is broken
+#         segmentedIntakeManifold.append(
+#             extrude_along_path(
+# #                 construct_polygon(seg + 1,
+#                 construct_polygon(intake_resolution,
+#                                   inlet_radius_major, inlet_radius_minor, length_iterator),
+#                 [[0, 0, length_iterator], [0, 0, length_iterator + length_iterator]],
+#             )
+#         )
+    intakeManifold+=up(length_iterator+length_iterator)(cylinder(r=inlet_radius, center=True))
+    return hull()(intakeManifold)
+#     return hull()(segmentedIntakeManifold)
+
+
+# In[48]:
+
 
 ############# Write to File (for logging) #############
-# solution = extrude_intake_manifold()
-# scad_render_to_file(
-#     solution,
-#     "intakeManifold.scad",
-#     "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
-# )
+intakeSlitHeight = 7
+intakeSlitWidth = 2
+wallWidth = 1
+intakeSlitLength = 20
+solution = extrude_intake_manifold(             intake_resolution=100,             exhaust_slit=intakeSlitHeight + wallWidth,             exhaust_width=intakeSlitWidth + wallWidth,            exhaust_length=intakeSlitLength)
+scad_render_to_file(
+    solution,
+    "intakeManifold.scad"
+)
 ################################################
+
+
+# In[ ]:
+
+
+
+
