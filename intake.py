@@ -85,7 +85,6 @@ def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exha
         #polygon also loses some precision to circle. 
         #should find nonlinear way to extrude
         
-        print('comparing area elipse: {} with rectangle: {} '.format(                                 pi*inlet_radius_major*inlet_radius_minor, exhaust_slit*exhaust_width))
         
         length_iterator += exhaust_length/intake_resolution
         

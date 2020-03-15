@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[6]:
+# In[1]:
 
 
 from solid import *
@@ -13,14 +13,14 @@ from intake import extrude_intake_manifold
 import viewscad
 
 
-# In[7]:
+# In[2]:
 
 
 #############Static Config#############
 CircleResolution = 100 
 
 
-# In[8]:
+# In[3]:
 
 
 # TODO: verify wallWidth addition to solids works
@@ -35,7 +35,7 @@ CircleResolution = 100
 #  sequential-parallel array given a volume/manifold geometry)
 
 
-# In[9]:
+# In[4]:
 
 
 def cycloneFilter(
@@ -114,7 +114,7 @@ def cycloneFilter(
     return filter
 
 
-# In[10]:
+# In[5]:
 
 
 ############# Build Filter: #############
@@ -124,7 +124,7 @@ solution = cycloneFilter(
     cylinderRadius=10, cylinderHeight=15, wallWidth=0.5)
 
 
-# In[47]:
+# In[6]:
 
 
 # Optimization Considerations:
@@ -146,7 +146,7 @@ solution = cycloneFilter(
 #  also constrain the parameters to reduce testing (discretize and limit parameter space)
 
 
-# In[48]:
+# In[7]:
 
 
 #TODO: this is not functioning in current jupyter lab but would like to get working
@@ -155,7 +155,7 @@ solution = cycloneFilter(
 # r.render(solution)
 
 
-# In[49]:
+# In[8]:
 
 
 ############# Writeout Filter Model #############
