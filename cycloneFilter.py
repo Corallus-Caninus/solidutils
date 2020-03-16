@@ -25,8 +25,9 @@ CircleResolution = 100
 
 # TODO: verify wallWidth addition to solids works
 #               (area is no less than intakeRadius throughout the model)
-#               only pressure lose should be from friction and filtering no venturi effect
+#               only pressure loss should be from friction and filtering no venturi effect
 
+# TODO: may make sense to define this as an object to access local variables etc.
 
 # DESIGN GOAL:
 # create an object that will possibly be used for:
@@ -41,7 +42,6 @@ CircleResolution = 100
 def cycloneFilter(
         intakeSlitHeight,
         intakeSlitWidth,
-        intakeSlitLength,
         intakeLeft,
         vortexSearcherDepth,
         collectorDepth,
@@ -58,10 +58,9 @@ def cycloneFilter(
     Parameters:
         intakeSlitHeight: air intake nozzle height
         intakeSlitWidth: air intake nozzle width, should be minimized to particle/blob diameter
-        intakeSlitLength: length of intake nozzle tube connecting and transforming the intake tube to a slit
         intakeLeft: if True, put intake on left side of filter, else place on right. 
         useful for symmetric arrays in rectangular manifolds.
-        vortexSearcherDepth: sets depth of vortex (considered only past intakeSlitLength)
+        vortexSearcherDepth: sets depth of vortex (considered only past intakeSlitHeight)
         collectorDepth: depth of collector cone after cylinder
         cylinderRadius: radius of cylinder that makes up the hull
         cylinderHeight: height of cylinder that makes up the hull
@@ -73,6 +72,8 @@ def cycloneFilter(
     #define intake radius to ensure intake and outlet cross sectional area is equivalent
     #this optimizes for pressure drop across the filter 
     intakeRadius = sqrt(intakeSlitHeight*intakeSlitWidth/pi)
+    assert cylinderRadius > intakeRadius
+    intakeSlitLength = cylinderRadius//2
     
     # build each part
     mainBodySolid = cylinder(r=(cylinderRadius + wallWidth),
@@ -114,17 +115,17 @@ def cycloneFilter(
     return filter
 
 
-# In[5]:
+# In[6]:
 
 
 ############# Build Filter: #############
 solution = cycloneFilter(
-    intakeSlitHeight=10, intakeSlitWidth=2, intakeSlitLength=20,
+    intakeSlitHeight=10, intakeSlitWidth=2, 
     intakeLeft=True, vortexSearcherDepth=5, collectorDepth=75,
     cylinderRadius=10, cylinderHeight=15, wallWidth=0.5)
 
 
-# In[6]:
+# In[7]:
 
 
 # Optimization Considerations:
@@ -146,7 +147,7 @@ solution = cycloneFilter(
 #  also constrain the parameters to reduce testing (discretize and limit parameter space)
 
 
-# In[7]:
+# In[8]:
 
 
 #TODO: this is not functioning in current jupyter lab but would like to get working
@@ -155,7 +156,7 @@ solution = cycloneFilter(
 # r.render(solution)
 
 
-# In[8]:
+# In[9]:
 
 
 ############# Writeout Filter Model #############
