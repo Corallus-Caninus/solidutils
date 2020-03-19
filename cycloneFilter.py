@@ -36,7 +36,7 @@ CircleResolution = 100
 #  sequential-parallel array given a volume/manifold geometry)
 
 
-# In[4]:
+# In[10]:
 
 
 def cycloneFilter(
@@ -111,11 +111,13 @@ def cycloneFilter(
     else:
         filter = mainBody +             rotate([180, 0, 0])(collectorCone) +             up(cylinderHeight - (vortexSearcherDepth + intakeSlitHeight-wallWidth))(vortexTube) +             right(cylinderRadius - intakeSlitWidth)(up(cylinderHeight - intakeSlitHeight/2 - wallWidth)
                                                     (rotate([90, 90, 0])(intake)))
-
+    
+    filter = down(cylinderHeight)(filter)
+    print(filter)
     return filter
 
 
-# In[6]:
+# In[11]:
 
 
 ############# Build Filter: #############
@@ -125,7 +127,7 @@ solution = cycloneFilter(
     cylinderRadius=10, cylinderHeight=15, wallWidth=0.5)
 
 
-# In[7]:
+# In[12]:
 
 
 # Optimization Considerations:
@@ -147,7 +149,7 @@ solution = cycloneFilter(
 #  also constrain the parameters to reduce testing (discretize and limit parameter space)
 
 
-# In[8]:
+# In[13]:
 
 
 #TODO: this is not functioning in current jupyter lab but would like to get working
@@ -156,7 +158,7 @@ solution = cycloneFilter(
 # r.render(solution)
 
 
-# In[9]:
+# In[14]:
 
 
 ############# Writeout Filter Model #############
@@ -170,9 +172,7 @@ scad_render_to_file(
 )
 
 
-# In[ ]:
-
-
+# In[15]:
 
 
 
