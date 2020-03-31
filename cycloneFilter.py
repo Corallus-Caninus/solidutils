@@ -1,28 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
+# To add a new cell, type '# %%'
+# To add a new markdown cell, type '# %% [markdown]'
+# %%
 from solid import *
 from solid.utils import *
-from math import sin, cos, radians, degrees
+from math import sin, cos, radians, degrees, sqrt
 # import ipywidgets as widgets
 
 from intake import extrude_intake_manifold
 import viewscad
 
 
-# In[2]:
-
-
+# %%
 #############Static Config#############
-CircleResolution = 100 
+# CircleResolution = 100 #REMOVE FOR FREECAD COMPATABILITY 
 
 
-# In[3]:
-
-
+# %%
 # TODO: verify wallWidth addition to solids works
 #               (area is no less than intakeRadius throughout the model)
 #               only pressure loss should be from friction and filtering no venturi effect
@@ -36,9 +29,7 @@ CircleResolution = 100
 #  sequential-parallel array given a volume/manifold geometry)
 
 
-# In[10]:
-
-
+# %%
 def cycloneFilter(
         intakeSlitHeight,
         intakeSlitWidth,
@@ -67,21 +58,22 @@ def cycloneFilter(
         wallWidth: width of wall for all parts
     '''
     
-    ############# Build Solids: #############
-    # WAS: +wallWidth
     #define intake radius to ensure intake and outlet cross sectional area is equivalent
     #this optimizes for pressure drop across the filter 
     intakeRadius = sqrt(intakeSlitHeight*intakeSlitWidth/pi)
     assert cylinderRadius > intakeRadius
     intakeSlitLength = cylinderRadius//2
-    
+
+    ############# Build Solids: #############
     # build each part
-    mainBodySolid = cylinder(r=(cylinderRadius + wallWidth),
-                             h=(cylinderHeight+wallWidth), segments=CircleResolution)
+    mainBodySolid = cylinder(r=(cylinderRadius + wallWidth), h=(cylinderHeight+wallWidth))
+                            #  h=(cylinderHeight+wallWidth), segments=CircleResolution)
     collectorConeSolid = cylinder(
-        r1=(cylinderRadius + wallWidth), r2=(intakeRadius + wallWidth), h=collectorDepth, segments=CircleResolution)
+        r1=(cylinderRadius + wallWidth), r2=(intakeRadius + wallWidth), h=collectorDepth)
+        # r1=(cylinderRadius + wallWidth), r2=(intakeRadius + wallWidth), h=collectorDepth, segments=CircleResolution)
     vortexTubeSolid = cylinder(
-        r=(intakeRadius + wallWidth), h=(vortexSearcherDepth + intakeSlitHeight), segments=CircleResolution)
+        r=(intakeRadius + wallWidth), h=(vortexSearcherDepth + intakeSlitHeight))
+        # r=(intakeRadius + wallWidth), h=(vortexSearcherDepth + intakeSlitHeight), segments=CircleResolution)
     intakeSolid = extrude_intake_manifold(
         # TODO: constants have no place in parametric models
         intake_resolution=100,
@@ -90,12 +82,14 @@ def cycloneFilter(
         exhaust_length=intakeSlitLength)
 
     ############# Open holes inside solids: #############
-    # becuase we parameterized by radius, wall width can be subtracted directly
-    mainBody = mainBodySolid -         cylinder(r=cylinderRadius, h=cylinderHeight, segments=CircleResolution)
+    mainBody = mainBodySolid -         cylinder(r=cylinderRadius, h=cylinderHeight)
+        # cylinder(r=cylinderRadius, h=cylinderHeight, segments=CircleResolution)
     collectorCone = collectorConeSolid -         hole()(cylinder(r1=cylinderRadius,
-                        r2=intakeRadius, h=collectorDepth, segments=CircleResolution))
+                        r2=intakeRadius, h=collectorDepth))
+                        # r2=intakeRadius, h=collectorDepth, segments=CircleResolution))
     vortexTube = vortexTubeSolid -         hole()(cylinder(r=(intakeRadius),
-                        h=(vortexSearcherDepth + intakeSlitHeight), segments=CircleResolution))
+                        h=(vortexSearcherDepth + intakeSlitHeight)))
+                        # h=(vortexSearcherDepth + intakeSlitHeight), segments=CircleResolution))
     intake = intakeSolid - hole()(extrude_intake_manifold(
         intake_resolution=100,
         exhaust_slit=intakeSlitHeight,
@@ -113,13 +107,10 @@ def cycloneFilter(
                                                     (rotate([90, 90, 0])(intake)))
     
     filter = down(cylinderHeight)(filter)
-    print(filter)
     return filter
 
 
-# In[11]:
-
-
+# %%
 ############# Build Filter: #############
 solution = cycloneFilter(
     intakeSlitHeight=10, intakeSlitWidth=2, 
@@ -127,9 +118,7 @@ solution = cycloneFilter(
     cylinderRadius=10, cylinderHeight=15, wallWidth=0.5)
 
 
-# In[12]:
-
-
+# %%
 # Optimization Considerations:
 # minimize: cylinderHeight constrained by intakeSlitLength
 # minimize: vortexSearcherDepth constrained by cylinderHeight (only increased based on low pressure aerodynamics)
@@ -149,18 +138,14 @@ solution = cycloneFilter(
 #  also constrain the parameters to reduce testing (discretize and limit parameter space)
 
 
-# In[13]:
-
-
+# %%
 #TODO: this is not functioning in current jupyter lab but would like to get working
 # r = viewscad.Renderer(openscad_exec="/usr/bin/openscad")
 #TODO: save to file then render to try another angle at render method
 # r.render(solution)
 
 
-# In[14]:
-
-
+# %%
 ############# Writeout Filter Model #############
 scad_render_to_file(
     solution,
@@ -172,12 +157,10 @@ scad_render_to_file(
 )
 
 
-# In[15]:
+# %%
+solution
 
 
-
-# In[ ]:
-
-
+# %%
 
 
