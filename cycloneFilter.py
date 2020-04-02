@@ -14,20 +14,18 @@ import viewscad
 #############Static Config#############
 # CircleResolution = 100 #REMOVE FOR FREECAD COMPATABILITY 
 
-
-# %%
-# TODO: verify wallWidth addition to solids works
-#               (area is no less than intakeRadius throughout the model)
-#               only pressure loss should be from friction and filtering no venturi effect
-
-# TODO: may make sense to define this as an object to access local variables etc.
-
-# DESIGN GOAL:
-# create an object that will possibly be used for:
-# 1. design optimization for wetScrubber and/or vortex filterArray
-# 2. grid array iteration (for instance: iterating for effective paricle diameter in
-#  sequential-parallel array given a volume/manifold geometry)
-
+# %% [markdown]
+#  TODO: verify wallWidth addition to solids works
+#                (area is no less than intakeRadius throughout the model)
+#                only pressure loss should be from friction and filtering no venturi effect
+# 
+#  TODO: may make sense to define this as an object to access local variables etc.
+# 
+# ### DESIGN GOAL:
+# - create an object that will possibly be used for:
+# - 1. design optimization for wetScrubber and/or vortex filterArray
+# - 2. grid array iteration (for instance: iterating for effective paricle diameter in
+# -  sequential-parallel array given a volume/manifold geometry)
 
 # %%
 def cycloneFilter(
@@ -40,7 +38,7 @@ def cycloneFilter(
         cylinderHeight,
         wallWidth
 ):
-    # TODO: pir^2 must be greater than intake cross section where r is cylinderRadius.
+    # TODO: assert pir^2 must be greater than intake cross section where r is cylinderRadius.
     # need more safety constraints.
     #TODO: verify intake and outlet radius
     '''
@@ -117,43 +115,33 @@ solution = cycloneFilter(
     intakeLeft=True, vortexSearcherDepth=5, collectorDepth=75,
     cylinderRadius=10, cylinderHeight=15, wallWidth=0.5)
 
-
-# %%
-# Optimization Considerations:
-# minimize: cylinderHeight constrained by intakeSlitLength
-# minimize: vortexSearcherDepth constrained by cylinderHeight (only increased based on low pressure aerodynamics)
-# minimize: intakeSlitWidth: by particle diameter
-# minimize: cylinderRadius for volume, otherwise this would be maximized (design constraint)
-# minimize: wallWidth wrt pressure and material compressive strength
-# maximize: intakeSlitLength
-# maximize: collectorDepth ideally to infinity if pressure is infinity (perfect vacuum)
-# TODO: consider a higher level, safer parameterization for these considerations:
-#               remove: cylinderHeight, cylinderRadius by intakeArea, vortexSearcherDepth(after CFD analysis wrt pressure and intake model),
-#                             |_need to be constrained by pressure models
-
-# FUTURE DEVELOPMENT:
-#   set minimum and maximum values for parameters
-#  (so they dont create unsustainable models e.g.: intakeSlit>cylinderHeight)
-#  then run optimization algorithm on it wrt CFD (consider FreeCAD)
-#  also constrain the parameters to reduce testing (discretize and limit parameter space)
-
-
-# %%
-#TODO: this is not functioning in current jupyter lab but would like to get working
-# r = viewscad.Renderer(openscad_exec="/usr/bin/openscad")
-#TODO: save to file then render to try another angle at render method
-# r.render(solution)
-
+# %% [markdown]
+# ### Optimization Considerations:
+# - minimize: cylinderHeight constrained by intakeSlitLength
+# - minimize: vortexSearcherDepth constrained by cylinderHeight (only increased based on low pressure aerodynamics)
+# - minimize: intakeSlitWidth: by particle diameter
+# - minimize: cylinderRadius for volume, otherwise this would be maximized (design constraint)
+# - minimize: wallWidth wrt pressure and material compressive strength
+# - maximize: intakeSlitLength
+# - maximize: collectorDepth ideally to infinity if pressure is infinity (perfect vacuum)
+# 
+# #### TODO: consider a higher level, safer parameterization for these considerations:
+# -               remove: cylinderHeight, cylinderRadius by intakeArea, vortexSearcherDepth(after CFD analysis wrt pressure and intake model),
+# -                             |_need to be constrained by pressure models
+# 
+# ### FUTURE DEVELOPMENT:
+# -   SET INTAKE MANIFOLD WITHIN CYLINDER TO BE MORE FABRICATABLE (no inner masting of cyclone body)
+# -   empirically test collector cone diameter, may want to make larger or change in general
+# -   set minimum and maximum values for parameters
+# -  (so they dont create unsustainable models e.g.: intakeSlit>cylinderHeight)
+# -  then run optimization algorithm on it wrt CFD (consider FreeCAD)
+# -  also constrain the parameters to reduce testing (discretize and limit parameter space)
 
 # %%
 ############# Writeout Filter Model #############
 scad_render_to_file(
     solution,
-    "cycloneFilter.scad",
-    # "PUT THE PATH TO YOUR OPENSCAD .EXE HERE",
-
-    # REMOVE THIS WHEN COMMITING
-    #    "C:/Users/jw.local/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/OpenSCAD.exe",
+    "cycloneFilter.scad"
 )
 
 
