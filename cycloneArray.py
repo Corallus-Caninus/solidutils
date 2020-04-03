@@ -173,7 +173,7 @@ class cycloneArray:
 
                 # have to tap manifold access lines, since hole() cant be used due to vortex searcher
                 manifoldAccess = cylinder(
-                    r=intakeRadius - params[7], h=2*params[7])
+                    r=intakeRadius, h=2*params[7])
                 manifoldAccess = left(curPosition[0])(manifoldAccess)
                 manifoldAccess = forward(curPosition[1])(manifoldAccess)
 
@@ -255,7 +255,7 @@ class cycloneArray:
         # tap manifold from cylinder
         # TODO: ensure this doesnt clip vortex searcher
         leftManifoldAccess = cylinder(
-            r=intakeRadius - params[7], h=2*params[7])
+            r=intakeRadius, h=2*params[7])
         leftManifoldAccess = left(curPosition[0])()(leftManifoldAccess)
         leftManifoldAccess = forward(curPosition[1])()(leftManifoldAccess)
 
@@ -269,7 +269,7 @@ class cycloneArray:
         rightParams[2] = False
         # tap manifold from cylinder
         rightManifoldAccess = cylinder(
-            r=intakeRadius - params[7], h=2*params[7])
+            r=intakeRadius, h=2*params[7])
         rightManifoldAccess = right(curPosition[0])()(rightManifoldAccess)
         rightManifoldAccess = forward(curPosition[1])()(rightManifoldAccess)
 
