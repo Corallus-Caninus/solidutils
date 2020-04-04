@@ -24,7 +24,7 @@ def null(x): return x
 
 init_params = [50000, 15000,
                True, 10000, 30000,
-               40000, 100000, 1000]
+               60000, 100000, 1000]
 
 delta_params = [geometric_reduction_slit_width, geometric_reduction_slit_height,
                 null, null, null,
@@ -37,7 +37,7 @@ final_params = [500, 1000,
 
 # cycloneArray = cycloneArray(init_params, delta_params, final_params, 500000, 500000, 500000, 20000)
 builder = cycloneArray()
-cycloneArray = builder.cycloneArray(init_params, delta_params, final_params, 450000, 450000, 300000, 20000)
+cycloneArray = builder.cycloneArray(init_params, delta_params, final_params, 350000, 350000, 400000, 30000)
 
 print('done', cycloneArray)
 scad_render_to_file(cycloneArray, 'cycloneArray.scad')

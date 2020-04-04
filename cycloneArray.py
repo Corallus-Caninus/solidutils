@@ -82,6 +82,8 @@ class cycloneArray:
 
         # TODO: suspend in a box using infill between box and cycloneArray solution. should actually be easier here than in freecad.
 
+        #TODO: minimize sequence distance. consider delta_params[] lookahead for yPosition iteration
+
         ### CYCLONE VARIABLES ###
         params = init_params
         # current position of cyclones being written
@@ -142,7 +144,8 @@ class cycloneArray:
             # distance between each filter
             xDistance = 2*params[5] + params[7] + \
                 2*sqrt(params[1]*params[0]/pi)
-            yDistance = 3*params[5] + params[7]
+            yDistance = params[5] + 2*delta_params[5](params[5]) + params[7]
+
 
             parallelFilters = width//xDistance
             print('adding {} parallel filters to current sequence..'.format(
@@ -308,27 +311,22 @@ class cycloneArray:
         if isParallel:
             lPipe = 0
             exhaustLength = yDistance  # connect in parallel
+            #TODO: build parallel intake U-Pipe
         else:
             exhaustLength = yDistance - \
                 delta_params[5](params[5]) #TODO: check final_params
-            # TODO:  just extrude until above next row intake then tap down... need cylinderRadius of next row
-            # TODO: calculate further delta_params to fit next rows intakeManifold
             # NOTE: use intersection method
-            # build intake manifold
-
-            #TODO: implement nextXXXXX for params here
+            # build intake manifold L-Pipe
             lPipeSolid = cube(
-                [width + delta_params[7](params[7]), delta_params[5](params[5]) - delta_params[7](params[7]), delta_params[0](params[0]) + manifoldCeiling + delta_params[7](params[7])])
-
-            lPipe = lPipeSolid - hole()(down(delta_params[7](params[7])/2)(right(delta_params[7](params[7])/2)(forward(delta_params[7](params[7])/2) \
-                    (cube([width, delta_params[5](params[5]) - 2*delta_params[7](params[7]), delta_params[0](params[0]) + manifoldCeiling + delta_params[7](params[7])])))))
+                [width + delta_params[7](params[7]), delta_params[5](params[5]) - delta_params[7](params[7]), \
+                        delta_params[0](params[0]) + manifoldCeiling + 2*delta_params[7](params[7])])
+            #TODO: this should be up for hole since solution hasnt translated
+            lPipe = lPipeSolid - hole()(up(delta_params[7](params[7])/2)(right(delta_params[7](params[7])/2)(forward(delta_params[7](params[7])/2) \
+                    (cube([width, delta_params[5](params[5]) - 2*delta_params[7](params[7]), delta_params[0](params[0]) + manifoldCeiling])))))
 
             lPipe = left(width/2)(lPipe)
             lPipe = down(delta_params[0](params[0]))(lPipe)
-            lPipe = up(params[7])(lPipe)
 
-            # lPipe = back(
-            #     delta_params[5](params[5]) + nextIntakeSpan + delta_params[7](params[7]))(lPipe)
             lPipe = forward(curPosition[1] + yDistance - 2*delta_params[5](params[5]))(lPipe) #TODO: nextParams
 
         # build intake manifold
@@ -366,7 +364,6 @@ class cycloneArray:
                                                              (cube([exhaustSpan, 2*intakeRadius, manifoldCeiling]))))
         exhaustPipeline = exhaustPipelineSolid - \
             hole()(forward(params[7]/2)(exhaustPipeline))
-
 
         # fuse exhaust manifold solution
         exhaustPipeline = exhaustPipeline + exhaustManifold
