@@ -24,7 +24,7 @@ def null(x): return x
 
 init_params = [50000, 15000,
                True, 10000, 30000,
-               50000, 100000, 1000]
+               40000, 100000, 1000]
 
 delta_params = [geometric_reduction_slit_width, geometric_reduction_slit_height,
                 null, null, null,

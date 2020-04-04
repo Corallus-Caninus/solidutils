@@ -318,13 +318,13 @@ class cycloneArray:
 
             #TODO: implement nextXXXXX for params here
             lPipeSolid = cube(
-                [width + delta_params[7](params[7]), delta_params[5](params[5]) - delta_params[7](params[7]), manifoldCeiling + delta_params[7](params[7])])
+                [width + delta_params[7](params[7]), delta_params[5](params[5]) - delta_params[7](params[7]), delta_params[0](params[0]) + manifoldCeiling + delta_params[7](params[7])])
 
             lPipe = lPipeSolid - hole()(down(delta_params[7](params[7])/2)(right(delta_params[7](params[7])/2)(forward(delta_params[7](params[7])/2) \
-                    (cube([width, delta_params[5](params[5]) - 2*delta_params[7](params[7]), manifoldCeiling + delta_params[7](params[7])])))))
+                    (cube([width, delta_params[5](params[5]) - 2*delta_params[7](params[7]), delta_params[0](params[0]) + manifoldCeiling + delta_params[7](params[7])])))))
 
             lPipe = left(width/2)(lPipe)
-            # lPipe = down(delta_params[0](params[0]))(lPipe)
+            lPipe = down(delta_params[0](params[0]))(lPipe)
             lPipe = up(params[7])(lPipe)
 
             # lPipe = back(
