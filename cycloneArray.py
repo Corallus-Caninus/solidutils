@@ -5,10 +5,11 @@ import viewscad
 import math
 from copy import deepcopy
 
-#TODO: use distribute_in_grid method from openscad utils, some introspection is needed for parametric manifold fitting
+# TODO: use distribute_in_grid method from openscad utils, some introspection is needed for parametric manifold fitting
 #      so this may be the best implementation.
-#TODO: write shell method that implementes hole() or subtractive differencing given wallWidth and hole boolean
+# TODO: write shell method that implementes hole() or subtractive differencing given wallWidth and hole boolean
 #      e.g.: shell(wall=10, hole=True)(cube([100,100,100]))
+
 
 class cycloneArray:
     # TODO: prototype transition to object oriented
@@ -57,7 +58,7 @@ class cycloneArray:
 
         # TODO: assert each cyclone doesnt cause pressure differentials due to cylinder_radius
         #      being smaller than intake/outlet_radius (already preliminary cheked just need thorough code trace)
-        # TODO: assert initial cylinder can fit in the first place (init cylinderRadius)
+        # TODO: assert initial cylinder can fit in the first place (init cylinderRadius) and other bounding box min constraints
         #
         # TODO: curtains cause low pressure regions due to square loss across large volume. this increases clog chance greatly
         #      compared to high pressure pipelines minimized for cross section of intake/outlet where constant high velocity fields
@@ -66,10 +67,21 @@ class cycloneArray:
         #
 
         # TODO: set positional parameters as dictionary for keyword reference and unpack with ** operator
+        #       double splat causes huge number of keyword arguments, consider passing in dictionary and dereferencing each entry here
+        #       with locals().update(final_params)
+        #       can also use finals = SimpleNamespace(**final_params) then finals.cylinderRadius etc.
+        #       NOTE: this can regretably wait until basic feature functionality.
+        # find a way to programmatically fix this e.g. rope, custom python, vim regex etc.
+
+        # TODO: change sequential up right etc. commands to translate()()
+
         # TODO: in the future attempt inheritance and polymorphism when creating heirarchy of parametrized abstraction
         #  (e.g.: cyclone filter->cyclone array)
 
-        # TODO: refactor/reduce all of this conditions are spread out too much
+        # TODO: trace and check bufferArea and cross-sectional equivalence
+
+        # TODO: suspend in a box using infill between box and cycloneArray solution. should actually be easier here than in freecad.
+
         ### CYCLONE VARIABLES ###
         params = init_params
         # current position of cyclones being written
@@ -109,7 +121,7 @@ class cycloneArray:
                     else:
                         array += cyclone
 
-                #TODO: connect previous and current sequence manifolds here. need if else condition
+                # TODO: connect previous and current sequence manifolds here. need if else condition
                 #      for whether manifold is parallel or sequential.
 
                 arrayBuffer.clear()
@@ -117,7 +129,8 @@ class cycloneArray:
             # keep z dimension the same throughout array by mutating collector depth
             # TODO: this should be extracted and integrated into collectorDepth parameter
             # of cycloneFilter parameterization
-            # TODO: integrate this with manifold ceiling to reduce z-axis params
+            # TODO: integrate this with manifold ceiling to reduce z-axis params,
+            #       this needs to go
             if params[6] + params[4] < height:
                 params[4] += height - (params[6] + params[4])
             elif params[6] + params[4] > height:
@@ -153,12 +166,11 @@ class cycloneArray:
                 break
 
             ########### ADD FILTERS TO CURRENT SEQUENCE###########
-            # TODO: some of this can likely be refactored out to function calls
             print('parallelFilters {} mod 2 is {}'.format(
                 parallelFilters, parallelFilters % 2))
 
             intakeRadius = sqrt(params[0]*params[1]/pi)
-
+            # TODO: odd/even causes lots of sphagetti. make a function call across the conditions or refactor otherwise
             if parallelFilters % 2 != 0:
                 if areaBuffer <= 0:
                     # reached parallel cross-sectional area equivalence
@@ -167,7 +179,7 @@ class cycloneArray:
                 print('odd')
                 # start from origin then offset each filter origin+xDistance
                 initialFilter = cycloneFilter(*params)
-                # TODO: this always follows xDistance carriage return
+
                 initialFilter = left(curPosition[0])(initialFilter)
                 initialFilter = forward(curPosition[1])(initialFilter)
 
@@ -195,7 +207,7 @@ class cycloneArray:
                     leftFilter, rightFilter = self.cycloneRow(
                         params, intakeRadius, curPosition)
 
-                    #TODO: consider moving the below into cycloneRow since manifold mutates passed in buffer.
+                    # TODO: consider moving the below into cycloneRow since manifold mutates passed in buffer.
                     #      resolve this design divergence.
                     curPosition[0] += xDistance
 
@@ -209,9 +221,8 @@ class cycloneArray:
                     newSequence = True
                 else:
                     newSequence = False
-
                 manifold = self.cycloneManifold(
-                        params, newSequence, intakeRadius, curPosition, xDistance,yDistance, width, manifoldCeiling)
+                    params, newSequence, intakeRadius, curPosition, xDistance, yDistance, width, manifoldCeiling, delta_params)
 
                 arrayBuffer.append(manifold)
             else:
@@ -234,13 +245,13 @@ class cycloneArray:
                     arrayBuffer.append(rightFilter)
                     areaBuffer -= self.crossSectionalArea(*params)
 
-                #attach the manifold to this cyclone row
+                # attach the manifold to this cyclone row
                 if areaBuffer > 0:
                     newSequence = True
                 else:
                     newSequence = False
                 manifold = self.cycloneManifold(
-                            params, newSequence, intakeRadius, curPosition, xDistance, yDistance, width, manifoldCeiling)
+                    params, newSequence, intakeRadius, curPosition, xDistance, yDistance, width, manifoldCeiling, delta_params)
 
                 arrayBuffer.append(manifold)
 
@@ -280,66 +291,90 @@ class cycloneArray:
         rightFilter = rightFilter - hole()(rightManifoldAccess)
         return leftFilter, rightFilter
 
-    def cycloneManifold(self, params, isParallel, intakeRadius, curPosition, xDistance, yDistance, width, manifoldCeiling):
+    def cycloneManifold(self, params, isParallel, intakeRadius, curPosition, xDistance, yDistance, width, manifoldCeiling, delta_params):
         '''
         build the manifold in this row connecting the previous and next rows while considering sequencing.
         '''
-        #NOTE: exhaust conflicts with manifold when smaller, for now constrain final_params accordingly.
+        # NOTE: exhaust conflicts with manifold when smaller, for now constrain final_params accordingly.
         # spans entire row, height and width set to volume constraint
         exhaustSpan = 2*(curPosition[0] - xDistance + intakeRadius)
         intakeSpan = yDistance - 2*params[5] - 2*params[7]
+        nextIntakeSpan = yDistance - 2*(delta_params[5](params[5])) - 2*delta_params[7](params[7])
 
-        #build sequence or parallel manifold splice
+        nextIntakeRadius = sqrt(delta_params[0](params[0])*delta_params[1](params[1])/pi)
+
+
+        # build sequence or parallel manifold splice
         if isParallel:
-            exhaustLength = yDistance #connect in parallel 
-            #@DEPRECATED
-            # intakeManifold = None #hack
+            lPipe = 0
+            exhaustLength = yDistance  # connect in parallel
         else:
-            #on sequence iteration (here), create L pipe 
-            exhaustLength = params[5] + intakeRadius #connect in series
-   
-        #build intake manifold
+            exhaustLength = yDistance - \
+                delta_params[5](params[5]) #TODO: check final_params
+            # TODO:  just extrude until above next row intake then tap down... need cylinderRadius of next row
+            # TODO: calculate further delta_params to fit next rows intakeManifold
+            # NOTE: use intersection method
+            # build intake manifold
+
+            #TODO: implement nextXXXXX for params here
+            lPipeSolid = cube(
+                [width + delta_params[7](params[7]), delta_params[5](params[5]) - delta_params[7](params[7]), manifoldCeiling + delta_params[7](params[7])])
+
+            lPipe = lPipeSolid - hole()(down(delta_params[7](params[7])/2)(right(delta_params[7](params[7])/2)(forward(delta_params[7](params[7])/2) \
+                    (cube([width, delta_params[5](params[5]) - 2*delta_params[7](params[7]), manifoldCeiling + delta_params[7](params[7])])))))
+
+            lPipe = left(width/2)(lPipe)
+            # lPipe = down(delta_params[0](params[0]))(lPipe)
+            lPipe = up(params[7])(lPipe)
+
+            # lPipe = back(
+            #     delta_params[5](params[5]) + nextIntakeSpan + delta_params[7](params[7]))(lPipe)
+            lPipe = forward(curPosition[1] + yDistance - 2*delta_params[5](params[5]))(lPipe) #TODO: nextParams
+
+        # build intake manifold
         intakeManifoldSolid = cube(
             [width + params[7], intakeSpan, params[5] + params[7]])
         intakeManifold = intakeManifoldSolid - hole()(up(params[7]/2)(right(params[7]/2)(forward(params[7]/2)(cube(
             [width, intakeSpan-params[7], params[5]])))))
-        
+
         intakeManifold = left(width/2)(intakeManifold)
         intakeManifold = down(params[0])(intakeManifold)
-        
-        intakeManifold = back(params[5] + intakeSpan + params[7])(intakeManifold)
+
+        intakeManifold = back(
+            params[5] + intakeSpan + params[7])(intakeManifold)
         intakeManifold = forward(curPosition[1])(intakeManifold)
 
-        # build the exhaust manifold 
+        # build the exhaust manifold
         exhaustManifoldSolid = cube(
-            [width/2 + params[7], exhaustLength, manifoldCeiling + params[7]])
+            [width/2 + params[7], exhaustLength + params[7], manifoldCeiling + params[7]])
 
-        #TODO: ensure manifold exhaust width/2 fits for very small residual rows in a sequence (less than 3)
+        # TODO: ensure manifold exhaust width/2 fits for very small residual rows in a sequence (less than 3)
+        # set wall spacing
         exhaustManifold = right(
             params[7]/2)(up(params[7]/2)(forward(params[7])(cube([width/2, exhaustLength, manifoldCeiling]))))
         exhaustManifold = exhaustManifoldSolid - hole()(exhaustManifold)
 
         exhaustManifold = right(
             exhaustSpan/2 + params[7] - width/4)(exhaustManifold)
-        exhaustManifold = forward(params[5]/2)(exhaustManifold)
+        # exhaustManifold = forward(params[5]/2)(exhaustManifold)
 
         # now build the actual pipeline connecting the rows of cyclones
         exhaustPipelineSolid = cube(
             [exhaustSpan+params[7], 2*intakeRadius + params[7], manifoldCeiling + params[7]])
-
+        # set wall spacing
         exhaustPipeline = up(params[7]/2)(right(params[7]/2)(hull()
-                                                            (cube([exhaustSpan, 2*intakeRadius, manifoldCeiling]))))
+                                                             (cube([exhaustSpan, 2*intakeRadius, manifoldCeiling]))))
         exhaustPipeline = exhaustPipelineSolid - \
             hole()(forward(params[7]/2)(exhaustPipeline))
 
+
+        # fuse exhaust manifold solution
         exhaustPipeline = exhaustPipeline + exhaustManifold
+
         # position atop the array
         exhaustPipeline = forward(curPosition[1]-intakeRadius)(exhaustPipeline)
         exhaustPipeline = left(exhaustSpan/2)(exhaustPipeline)
         exhaustPipeline = up(params[7])(exhaustPipeline)
 
-        # TODO: now go up and over
-        #TODO: also create inlet manifold
-        manifold = exhaustPipeline + intakeManifold 
-        return manifold #TODO: now return the exhaust as well.
-        
+        manifold = exhaustPipeline + intakeManifold + lPipe
+        return manifold  # TODO: now return the exhaust as well.

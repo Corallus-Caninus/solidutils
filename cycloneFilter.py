@@ -15,6 +15,8 @@ import viewscad
 #
 #  TODO: may make sense to define this as an object to access local variables etc.
 #
+
+#TODO: attempt to use new shell function 
 # ### DESIGN GOAL:
 # - create an object that will possibly be used for:
 # - 1. design optimization for wetScrubber and/or vortex filterArray
