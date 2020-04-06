@@ -15,7 +15,7 @@ from cycloneArray import cycloneArray
 # reduction methods
 def geometric_reduction_slit_height(x): return x/2  # remove floor bound
 def geometric_reduction_slit_width(x): return x/2  # remove floor bound
-def geometric_reduction_radius(x): return x/2  # remove floor bound
+def geometric_reduction_radius(x): return x/3  # remove floor bound
 def geometric_increase_height(x): return x + x/4  # remove ceiling bound
 # null is special case for no-op
 
@@ -37,7 +37,7 @@ final_params = [500, 1000,
 
 # cycloneArray = cycloneArray(init_params, delta_params, final_params, 500000, 500000, 500000, 20000)
 builder = cycloneArray()
-cycloneArray = builder.cycloneArray(init_params, delta_params, final_params, 350000, 350000, 400000, 30000)
+cycloneArray = builder.cycloneArray(init_params, delta_params, final_params, 400000,400000, 400000, 30000)
 
 print('done', cycloneArray)
 scad_render_to_file(cycloneArray, 'cycloneArray.scad')
