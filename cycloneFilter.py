@@ -3,7 +3,6 @@ from solid.utils import *
 from math import sin, cos, radians, degrees, sqrt
 # import ipywidgets as widgets
 from intake import extrude_intake_manifold
-import viewscad
 
 # TODO: consider object orientation with inheritance of openscadObject from solidpython
 #############Static Config#############
@@ -37,6 +36,9 @@ def cycloneFilter(
     # TODO: assert pir^2 must be greater than intake cross section where r is cylinderRadius.
     # need more safety constraints.
     # TODO: verify intake and outlet radius
+    # TODO: intake is touchiest parameter here. 
+    #       wall width and radii differentials break this faster than anything.
+    #       consider a simpler rectangular intake that doesnt breech the cylinderRadius
     '''
     Creates a Cone filter hull
 
@@ -56,7 +58,7 @@ def cycloneFilter(
     # this optimizes for pressure drop across the filter
     intakeRadius = sqrt(intakeSlitHeight*intakeSlitWidth/pi)
     assert cylinderRadius > intakeRadius
-    intakeSlitLength = cylinderRadius//2
+    intakeSlitLength = cylinderRadius/2
 
     ############# Build Solids: #############
     # build each part
@@ -93,7 +95,7 @@ def cycloneFilter(
 
     ############# Assemble filter: #############
     # mainBody
-    # TODO: remove rotates where appropriate
+    # TODO: change to translation to reduce verbosity 
     if(intakeLeft is True):
         filter = mainBody + rotate([180, 0, 0])(collectorCone) + up(cylinderHeight - (vortexSearcherDepth + intakeSlitHeight-wallWidth))(vortexTube) + left(cylinderRadius - intakeSlitWidth)(up(cylinderHeight - intakeSlitHeight/2 - wallWidth)
                                                                                                                                                                                               (rotate([90, 90, 0])(intake)))

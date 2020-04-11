@@ -54,7 +54,9 @@ def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exha
         a Hull() consisting of the segments created with construct_polygon
     '''
     inlet_radius = sqrt(exhaust_slit*exhaust_width/pi)
-    intakeManifold = down(1)(cube([exhaust_slit, exhaust_width, 1], center=True))
+    intakeManifold = cube([exhaust_slit, exhaust_width, 1], center=True)
+    #intakeManifold = down(1)(cube([exhaust_slit, exhaust_width, 1], center=True))
+
 #     segmentedIntakeManifold = []  # return value
     # constants are okay here as this module is meant to be transformed from origin
 #     segmentedIntakeManifold.append(
@@ -67,7 +69,6 @@ def extrude_intake_manifold(intake_resolution, exhaust_slit, exhaust_width, exha
     #TODO: this is the problem
     raderator_major = (exhaust_slit/2 - inlet_radius)/intake_resolution
     raderator_minor = (exhaust_width/2 - inlet_radius)/intake_resolution
-        
 
     inlet_radius_major = exhaust_slit/2
     inlet_radius_minor = exhaust_width/2
