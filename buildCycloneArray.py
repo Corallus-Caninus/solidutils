@@ -43,7 +43,7 @@ final_params = [5, 1,
 #     cylinderRadius=10, cylinderHeight=15, wallWidth=0.05]
 builder = cycloneArray()
 cycloneArray = builder.cycloneArray(init_params, delta_params, final_params, \
-    10000, 10000, 4000, 300)
+    8000, 10000, 4000, 300)
 
 print('done', cycloneArray)
 scad_render_to_file(cycloneArray, 'cycloneArray.scad')
