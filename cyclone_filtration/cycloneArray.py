@@ -10,8 +10,7 @@ from cycloneFilter import cycloneFilter
 #       this is mostly important in the initial intake and allows for cleaning surfaces if model is detachable 
 #       per sequence and fastened together. 
 
-#TODO: remove all + params[7] solid objects, everywall should
-#       be subtractive as a design paradigm
+#TODO: fix various minor overlap artifacts.
 class cycloneArray:
     def __init__(self):
         return None
@@ -166,18 +165,24 @@ class cycloneArray:
             parallelFilters = width//xDistance
             
             #calculate if nextRow will be the last in current sequence
-            lastSequence = areaBuffer - parallelFilters*self.crossSectionalArea(*params) <= 0
+            lastSequence = areaBuffer - \
+                    parallelFilters*self.crossSectionalArea(*params) <= 0
 
             ###########BUILD MANIFOLD###########
-            arrayBuffer.append(self.intakeManifold(params, intakeRadius, width, curPosition, yDistance, manifoldCeiling, \
-                                sameSequence, lastSequence))
-            arrayBuffer.append(self.exhaustManifold(params, intakeRadius, width, curPosition, yDistance, manifoldCeiling, \
-                                sameSequence, lastSequence))
+            arrayBuffer.append(self.intakeManifold(params, intakeRadius, width, \
+                    curPosition, yDistance, manifoldCeiling, \
+                    sameSequence, lastSequence))
+            arrayBuffer.append(self.exhaustManifold(params, intakeRadius, width, \
+                    curPosition, yDistance, manifoldCeiling, \
+                    sameSequence, lastSequence))
 
-            # keep z dimension the same throughout array by mutating collector depth
-            # TODO: this should be extracted and integrated into collectorDepth parameter
+            # keep z dimension the same throughout array by mutating collector 
+            # depth
+            # TODO: this should be extracted and integrated into collectorDepth 
+            # parameter
             # of cycloneFilter parameterization
-            # TODO: this needs to be refactored somewhere outside main loop. consider cycloneRow
+            # TODO: this needs to be refactored somewhere outside main loop. 
+            # consider cycloneRow
             #       since this is where cyclones are constructed and manipulated.
             # TODO: integrate this with manifold ceiling to reduce z-axis params
             if params[6] + params[4] < height:
@@ -312,7 +317,6 @@ class cycloneArray:
         RETURNS:
             a fully constructed OpenSCADObject exhaust manifold
         '''
-
         #Configuration
         exhaustManifoldWidth = width + params[7]
         exhaustManifoldLength = 3*intakeRadius + params[7]
@@ -320,7 +324,10 @@ class cycloneArray:
         exhaustManifoldHeight = manifoldCeiling + params[7]
 
         exhaustPipelineWidth = width/3 
-        exhaustPipelineSpan = yDistance - 1.5*params[5]
+        exhaustPipelineSpan =  yDistance - 2*params[5] + params[7]
+
+        exhaustCrossBarReach = yDistance + exhaustManifoldLength
+        #exhaustCrossBarReach = yDistance + 2*intakeRadius + params[7]
 
         #Construction
         exhaustManifoldSolid = cube([\
@@ -334,66 +341,56 @@ class cycloneArray:
                 center=True))
             
         if lastSequence:
-            #build exhaustButtDown to properly connect 
-            #exhaust crossBar
-            exhaustButtDownSolid = cube([\
-                    exhaustManifoldWidth, \
-                    exhaustManifoldLength, \
-                    exhaustManifoldHeight], \
-                    center=True)
-            exhaustButtDown = exhaustButtDownSolid - hole()(\
-                    cube([\
-                    exhaustManifoldWidth - params[7], \
-                    exhaustManifoldLength - params[7], \
-                    exhaustManifoldHeight - params[7]], \
-                    center=True))
-
-            #position atop the exhaustManifold
-            exhaustButtDown = up(exhaustManifoldHeight - params[7])(exhaustButtDown)
-
-            exhaustManifold += exhaustButtDown
-
             #build exhaust crossBar reaching back to previous sequence
-            exhaustButtBackSolid = cube([\
-                    exhaustPipelineWidth, \
+            #TODO: drop that ass to the flow
+            exhaustSequencePipelineSolid = cube([\
+                    exhaustManifoldWidth, \
                     exhaustPipelineSpan, \
                     exhaustManifoldHeight], \
                     center=True)
-            exhaustButtBack = exhaustButtBackSolid - hole()(cube([\
-                   exhaustPipelineWidth - params[7], \
+            exhaustSequencePipeline = exhaustSequencePipelineSolid - hole()(cube([\
+                   exhaustManifoldWidth - params[7], \
                    exhaustPipelineSpan - params[7], \
                    exhaustManifoldHeight - params[7]], 
                    center=True))
             
-            exhaustButtBack = up(exhaustManifoldHeight)(exhaustButtBack)
-            exhaustButtBack = forward(exhaustPipelineSpan/2 - exhaustManifoldLength/2)(exhaustButtBack)
+            #exhaustSequencePipeline = up(exhaustManifoldHeight)(exhaustSequencePipeline)
+            exhaustSequencePipeline = forward(exhaustPipelineSpan/2 - \
+                    exhaustManifoldLength/2) \
+                    (exhaustSequencePipeline)
 
-            exhaustManifold += exhaustButtBack
+            exhaustManifold += exhaustSequencePipeline
         else:
             #TODO: refactor common variables to more general names where applicable
+            #TODO: fix crossBarReach
             exhaustCrossBarSolid = cube([\
                     exhaustPipelineWidth,\
-                    yDistance,\
+                    exhaustCrossBarReach, \
                     exhaustManifoldHeight], \
                     center=True)
-            exhaustCrossBar = exhaustCrossBarSolid - hole()(cube([\
+            exhaustCrossBar = exhaustCrossBarSolid - hole()\
+                    (cube([\
                     exhaustPipelineWidth - params[7],\
-                    yDistance - params[7],\
+                    exhaustCrossBarReach - params[7],\
                     exhaustManifoldHeight - params[7]], \
                     center=True))
 
             exhaustCrossBar = up(exhaustManifoldHeight - \
                     params[7])\
                     (exhaustCrossBar)
-            exhaustCrossBar = forward(yDistance/2 - \
-                    intakeRadius/2 - params[7])\
-                    (exhaustCrossBar)
+            #exhaustCrossBar = forward(yDistance/2 - \
+            #        params[7])\
+            #        (exhaustCrossBar)
+            exhaustCrossBar = forward(exhaustCrossBarReach/2 - \
+                    exhaustManifoldLength/2)(exhaustCrossBar)
 
             exhaustManifold += exhaustCrossBar
 
         #move exhaustManifold solution into position
-        exhaustManifold = forward(curPosition[1])(exhaustManifold)
-        exhaustManifold = up(exhaustManifoldHeight/2 + params[7])(exhaustManifold)
+        exhaustManifold = forward(curPosition[1])\
+                (exhaustManifold)
+        exhaustManifold = up(exhaustManifoldHeight/2 + \
+                params[7])(exhaustManifold)
         
         return exhaustManifold
 
@@ -413,6 +410,7 @@ class cycloneArray:
         RETURNS:
             a fully constructed OpenSCADObject intake manifold
         '''
+        #TODO: raise intakeManifold's UPipe and crossSpan by the appropriate parameter
         #Configuration
         intakeManifoldWidth = width/3
         intakeManifoldLength = params[5] + params[7]
@@ -420,25 +418,25 @@ class cycloneArray:
         intakeManifoldHeight = 3*intakeRadius + params[0]# +\
                 #params[7]
 
-        UPipeVHeight = manifoldCeiling + \
-                intakeManifoldLength + params[7]
-        
+        #offset along z-axis of intakeCrossBar
+        intakeCrossBarOffset = 1.5*manifoldCeiling + \
+                intakeManifoldLength + 2*params[7]
         #yDistance without considering previous/next sequence
         intakeCrossBarReach = 4*params[5] + 2*params[7] 
         intakeCrossBarReach += intakeManifoldLength
 
-        #buttSpan =  yDistance - 1.5*params[5] - 1.5*params[7]
-        buttSpan =  yDistance + params[7]  - 1.5*params[5] - 1.5*params[7]#NOTE: this is correct spacing
+        buttSpan =  yDistance - \
+                1.5*params[5] - \
+                params[7]/2
+                #NOTE: this is correct spacing
         buttWidth = intakeManifoldWidth - params[7]
 
         #Construction
         #Build intakeManifold that connects cyclone inlets in parallel
-        #TODO: fix manifold wall spacing. This is unclean code and breaks design regularity 
         intakeManifoldSolid = cube([ \
             width, \
             intakeManifoldLength, \
             intakeManifoldHeight], center=True)
-
         intakeManifold = intakeManifoldSolid - hole()(cube([ \
             width - params[7], \
             intakeManifoldLength - params[7], \
@@ -451,41 +449,50 @@ class cycloneArray:
             #NOTE: subtracting 3 wallWidth here to make 
             #up for U-Pipe's not having wallWidth 3
             #TODO: verify this feature with new wallWidth paradigm
+            #TODO: may not need this anymore. either way resolve height.
             intakeButtSolid = cube([\
                 intakeManifoldWidth + 2*params[7], \
                 intakeManifoldLength, \
-                UPipeVHeight + params[0]/2], center=True)
+                intakeCrossBarOffset + params[0]/2], center=True)
             intakeButt = intakeButtSolid - hole()(cube([ \
                 intakeManifoldWidth - 3*params[7], \
                 intakeManifoldLength - params[7], \
-                UPipeVHeight + params[0]/2 - params[7]], center=True))
-
-            intakeButt = up(UPipeVHeight/2)(intakeButt)
+                intakeCrossBarOffset + params[0]/2 - params[7]], center=True))
+            intakeButt = up(intakeCrossBarOffset/2)(intakeButt)
             #intakeButt = back(intakeManifoldLength/2)(intakeButt)
 
             #Butt assembly
             intakeManifold += intakeButt
 
+        #TODO:  debugging U-Pipe and intakeCrossBar:
+        #       1.  U-Pipe needs to raise into crossBar
+        #           by the appropriate constraint.
+        #       UPipe - crossBar
+        #           *   UPipe always needs share height
+        #               with z-offset
+        #       2.  crossBar needs to raise with the proper
+        #           constraint wrt exhaust manifold.
+        #       crossBar - exhaustManifold
+        #           *   crossBar needs to share height of 
+        #               exhaust manifold constraint
         #build U-Pipe that connects the intakes of current 
         #row in a sequence in parallel 
-        #TODO: small spacing artifact between U-Pipe and 
         #intake manifold
-        UPipeSolid = cube([\
+        UPipeSolid = cube([ \
             intakeManifoldWidth, \
             intakeManifoldLength, \
-            UPipeVHeight], center=True)
+            intakeCrossBarOffset], center=True)
         UPipe = UPipeSolid - hole()(cube([ \
             intakeManifoldWidth - params[7],\
             intakeManifoldLength - params[7], \
-            UPipeVHeight - params[7]], center=True)) 
-            #VHeight is open on either end
+            intakeCrossBarOffset - params[7]], center=True)) 
 
-        UPipe = up(UPipeVHeight/2)(UPipe)
+        UPipe = up(intakeCrossBarOffset/2)(UPipe)
         #set atop the intakeManifold (xy-plane)
 
         if not lastSequence:
-            #daisy chain U-Pipes in each row 
-            #to connect sequence's intakes in parallel
+            #connect this sequence's 
+            #intakeManifolds in parallel
             intakeCrossBarSolid = cube([\
                 intakeManifoldWidth, \
                 intakeCrossBarReach, \
@@ -496,11 +503,8 @@ class cycloneArray:
                 intakeManifoldLength - params[7]], center=True))
 
             #TODO: minimize crossBarHeight
-            #TODO: refactor this with intakeButtSpan
-            intakeCrossBar = up(intakeManifoldLength + \
-                    manifoldCeiling + \
-                    params[0]/2 + \
-                    params[7])(intakeCrossBar) 
+            intakeCrossBar = up(intakeCrossBarOffset)\
+                    (intakeCrossBar)
             intakeCrossBar = forward(intakeCrossBarReach/2 - \
                     intakeManifoldLength/2)(intakeCrossBar)
 
@@ -516,7 +520,8 @@ class cycloneArray:
         
         # move intake manifold into position
         intakeManifold = back(1.5*params[5] + \
-            1.5*params[7])(intakeManifold)
+                2*params[7])(intakeManifold)
+            #1.5*params[7])(intakeManifold)
         intakeManifold = forward(curPosition[1])(intakeManifold)
 
         intakeManifold = down(params[0]/2 + \

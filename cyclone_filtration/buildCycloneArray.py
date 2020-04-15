@@ -21,11 +21,10 @@ def null(x): return x
 #TODO: standardize upon a dimension e.g.: centimeters
 #      this allows for easier scaling when transferring to 
 #      manufacturing (3d print slicing)
-#NOTE: params must be valid.
-#      do not rely on assertions.
-init_params = [300, 150,
+#NOTE: do not rely on assertions but implement them profusely
+init_params = [2400, 1200,
                True, 100, 300,
-               500, 1000, 25]
+               4000, 4000, 25]
 
 #delta_params = [geometric_reduction_slit_width, geometric_reduction_slit_height,
 delta_params = [geometric_reduction_slit_height, geometric_reduction_slit_width,
@@ -33,9 +32,9 @@ delta_params = [geometric_reduction_slit_height, geometric_reduction_slit_width,
                 geometric_reduction_radius, null, null]
 
 #NOTE: -1 is special case for unbounded
-final_params = [5, 1,
+final_params = [25, 5,
                 -1, -1, -1,
-                100, 2000, -1]
+                700, 1000, -1]
 
 # POSITIONAL LEGEND:
 # initParams=[intakeSlitHeight=10, intakeSlitWidth=2,
@@ -43,7 +42,7 @@ final_params = [5, 1,
 #     cylinderRadius=10, cylinderHeight=15, wallWidth=0.05]
 builder = cycloneArray()
 cycloneArray = builder.cycloneArray(init_params, delta_params, final_params, \
-    8000, 10000, 4000, 300)
+    50000, 50000, 10000, 3000)
 
 print('done', cycloneArray)
 scad_render_to_file(cycloneArray, 'cycloneArray.scad')
